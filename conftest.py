@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from fixture.application import Application
+from gen import  genereate
 import pytest
 import json
+import jsonpickle
 import os.path
+import importlib
 
 
 fixture = None
@@ -49,3 +52,28 @@ def stop(request):
 def pytest_addoption(parser):
     parser.addoption("--browser", action="store", default="firefox")
     parser.addoption("--cfg_target", action="store", default="cfg_target.json")
+
+
+# Load test data from JSON file
+def pytest_generate_tests(metafunc):
+    # To load test data - form fixture, use parameters with prefix "data_", but remove the prefix (first 5 symbols)
+    for fixture in metafunc.fixturenames:
+        if fixture.startswith("data_"):
+            testdata = load_from_module(fixture)
+            metafunc.parametrize(fixture, testdata, ids=[str(x) for x in testdata])
+        elif fixture.startswith("json_"):
+            genereate()
+            testdata = load_from_json(fixture[10:])
+            metafunc.parametrize(fixture, testdata, ids=[str(x) for x in testdata])
+
+
+def load_from_module(module):
+    return importlib.import_module("data.{}".format(module)).testdata
+
+
+def load_from_json(file):
+    file_target = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/{}.json".format(file))
+    with open(file_target) as file_in_use:
+        return jsonpickle.decode(file_in_use.read())
+
+
