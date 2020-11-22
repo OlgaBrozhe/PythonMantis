@@ -6,6 +6,7 @@ import json
 import jsonpickle
 import os.path
 import importlib
+import ftputil
 
 
 fixture = None
@@ -23,21 +24,57 @@ def load_config(file):
     return cfg_target
 
 
+# Load data from the configuration file
+@pytest.fixture(scope="session")
+def config(request):
+    config_request = request.config.getoption("--cfg_target")
+    return load_config(config_request)
+
+
 # Load web configuration from the configuration file
 @pytest.fixture
-def app(request):
+def app(request, config):
     global fixture
     browser = request.config.getoption("--browser")
-    web_config = load_config(request.config.getoption("--cfg_target"))["web"]
-    webadmin_config = load_config(request.config.getoption("--cfg_target"))["webadmin"]
     # Create fixture 1. if it is not initialised or 2. if it is initialised but invalid, e.g. browser failed
     if fixture is None or not fixture.is_valid():
-        fixture = Application(browser=browser, base_url=web_config["baseUrl"])
-    fixture.session.ensure_login(username=webadmin_config["username"], password=webadmin_config["password"])
+        fixture = Application(browser=browser, base_url=config["web"]["baseUrl"])
+    # Comment out the string below for run/debug test_login.py
+    #fixture.session.ensure_login(username=config["webadmin"]["username"], password=config["webadmin"]["password"])
     return fixture
 
 
-# Destroy/stop the fixture
+# FTP configuration
+@pytest.fixture(scope="session", autouse=True)
+def configure_server(request, config):
+    install_server_configuration(config['ftp']['host'], config['ftp']['username'], config['ftp']['password'])
+    # Restore FTP configuration
+    def fin():
+        restore_server_configuration(config['ftp']['host'], config['ftp']['username'], config['ftp']['password'])
+    request.addfinalizer(fin)
+
+
+def install_server_configuration(host, username, password):
+    with ftputil.FTPHost(host, username, password) as remote:
+        # Delete the backup file, if exists
+        if remote.path.isfile("config_inc.php.bak"):
+            remote.remove("config_inc.php.bak")
+        # Rename the original file into backup file
+        if remote.path.isfile("config_inc.php"):
+            remote.rename("config_inc.php", "config_inc.php.bak")
+        # Upload test config file
+        remote.upload(os.path.join(os.path.dirname(__file__), "resources/config_inc.php"), "config_inc.php")
+
+
+def restore_server_configuration(host, username, password):
+    with ftputil.FTPHost(host, username, password) as remote:
+        if remote.path.isfile("config_inc.php.bak"):
+            if remote.path.isfile("config_inc.php"):
+                remote.remove("config_inc.php")
+            remote.rename("config_inc.php.bak", "config_inc.php")
+
+
+# Destroy/stop the main fixture
 @pytest.fixture(scope="session", autouse=True)
 def stop(request):
     def fin():
