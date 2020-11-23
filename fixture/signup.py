@@ -22,4 +22,7 @@ class SignupHelper:
         wd.find_element_by_css_selector("input[value='Update User']").click()
 
     def extract_confirmation_url(self, text):
+        # Search for string in mail body (text) starting with http and till the end of the string,
+        # like http://localhost/mantisbt-1.2.20/verify.php?id=9&confirm_hash=98dc564d15154fd12764d272bba6ba76
+        # group(0) - everything suitable for the request
         return re.search("http://.*$", text, re.MULTILINE).group(0)
