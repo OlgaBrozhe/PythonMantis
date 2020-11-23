@@ -1,7 +1,5 @@
 import time
 from model.project_form import ProjectForm
-import string
-import random
 
 
 class ProjectHelper:

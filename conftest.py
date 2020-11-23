@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from fixture.application import Application
-from gen import  genereate
+from gen import genereate
 import pytest
 import json
 import jsonpickle
@@ -38,7 +38,7 @@ def app(request, config):
     browser = request.config.getoption("--browser")
     # Create fixture 1. if it is not initialised or 2. if it is initialised but invalid, e.g. browser failed
     if fixture is None or not fixture.is_valid():
-        fixture = Application(browser=browser, base_url=config["web"]["baseUrl"])
+        fixture = Application(browser=browser, config=config)
     # Comment out the string below for run/debug test_login.py
     #fixture.session.ensure_login(username=config["webadmin"]["username"], password=config["webadmin"]["password"])
     return fixture
