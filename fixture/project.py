@@ -12,6 +12,7 @@ class ProjectHelper:
     def get_projects_list(self):
         if self.project_cache is None:
             wd = self.app.wd
+            wd.get(self.app.base_url)
             self.open_projects_page()
             self.project_cache = []
             # Find rows in table
