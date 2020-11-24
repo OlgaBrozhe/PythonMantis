@@ -12,7 +12,7 @@ class ProjectHelper:
     def get_projects_list(self):
         if self.project_cache is None:
             wd = self.app.wd
-            wd.get(self.app.base_url)
+            self.app.open_home_page()
             self.open_projects_page()
             self.project_cache = []
             # Find rows in table
@@ -35,6 +35,7 @@ class ProjectHelper:
 
     def add_new_project(self, project):
         wd = self.app.wd
+        self.app.open_home_page()
         self.open_projects_page()
         wd.find_element_by_xpath("//input[@value='Create New Project']").click()
         self.fill_in_project_info(project)

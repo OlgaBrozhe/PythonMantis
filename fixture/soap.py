@@ -22,9 +22,10 @@ class SoapHelper:
         api_page_url = "{}/api/soap/mantisconnect.php?wsdl".format(base_url)
         client = Client(api_page_url)
         projects = client.service.mc_projects_get_user_accessible(username, password)
-        for project in projects:
-            projects_list.append(ProjectForm(project_name=project.project_name))
-        return list(projects_list)
+        for ProjectData in projects:
+            projects_list.append(ProjectForm(project_name=ProjectData.name))
+        projects_list = list(projects_list)
+        return projects_list
         # try:
         #     projects = client.service.mc_projects_get_user_accessible(username, password)
         #     for project in projects:
